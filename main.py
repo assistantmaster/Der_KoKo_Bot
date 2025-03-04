@@ -1,0 +1,213 @@
+import discord
+from discord.ext import commands
+from discord.ui import Button, View
+import random
+import asyncio
+import requests
+import json
+import os
+
+token = ""
+intents = discord.Intents.default()
+intents.message_content = True
+intents.voice_states = True  # Add this line to enable voice state intents
+intents.members = True  # Add this line to enable member intents
+
+class MyBot(commands.Bot):
+    async def setup_hook(self):
+        await self.tree.sync()
+
+bot = MyBot(command_prefix="\\", intents=intents)
+botlog = bot.get_channel(1204440357476241438)
+if os.path.exists("./count.txt"):
+    with open("./count.txt", "r") as count:
+        current_count = int(count.read())
+else:
+    current_count = 0
+
+if os.path.exists("./countuser.txt"):
+    with open("./countuser.txt", "r") as countuser:
+        countuser = int(countuser.read())
+else:
+    countuser = 0
+
+
+@bot.command()
+async def ping(ctx):
+    await ctx.send("pong")
+
+@bot.tree.command(name="ping", description="Replies with pong")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message("pong")
+
+@bot.event
+async def on_ready():
+    activity = discord.Activity(type=discord.ActivityType.listening, name="80s Musik")
+    await bot.change_presence(status=discord.Status.online, activity=activity)
+    print(f'Logged in as {bot.user}')
+    
+@bot.event
+async def on_message(msg):
+    botlog = bot.get_channel(1204440357476241438)
+    if not msg.author == bot.user:
+        #print(f"[{msg.author}] {msg.content}")
+        if ("idiot" in msg.content or
+        "dummkopf" in msg.content or
+        "trottel" in msg.content or
+        "arschloch" in msg.content or
+        "mistkerl" in msg.content or
+        "blödmann" in msg.content or
+        "spast" in msg.content or
+        "hornochse" in msg.content or
+        "vollidiot" in msg.content or
+        "pissnelke" in msg.content or
+        "schwachkopf" in msg.content or
+        "depp" in msg.content or
+        "penner" in msg.content or
+        "verlierer" in msg.content or
+        "honk" in msg.content or
+        "fuck" in msg.content or
+        "fick" in msg.content or
+        "shit" in msg.content or
+        "asshole" in msg.content or
+        "bastard" in msg.content or
+        "moron" in msg.content or
+        "idiot" in msg.content or
+        "loser" in msg.content or
+        "dumbass" in msg.content or
+        "jackass" in msg.content or
+        "jerk" in msg.content or
+        "prick" in msg.content or
+        "twat" in msg.content or
+        "wanker" in msg.content or
+        "dipshit" in msg.content or
+        "douchebag" in msg.content):
+            await msg.delete()
+            embed = discord.Embed(title="Nachricht gelöscht",
+                description=f'{msg.author.mention} hat "{msg.content}" in {msg.channel.mention} gesendet!',
+                color=0xff0000)
+            #await botlog.send(f'**Nachricht Gelöscht:** {msg.author.mention} hat "{msg.content}" in {msg.channel.mention} gesendet!')
+            await botlog.send(embed=embed)
+
+        if msg.channel.id == 1203656361901035520:
+            global current_count, countuser
+            try:
+                if msg.content is int:
+                    number = int(msg.content)
+                if os.path.exists("./countuser.txt"):
+                    with open("./countuser.txt", "r") as countuser:
+                        countuser = int(countuser.read())
+
+                if number == current_count + 1:
+                    if msg.author.id != countuser:
+                        current_count += 1
+                        countuser = msg.author.id
+                        with open("./count.txt", "w") as count:
+                            count.write(str(current_count))
+                        with open("./countuser.txt", "w") as count:
+                            count.write(str(countuser))
+                        await msg.add_reaction("✅")
+                    else:
+                        await msg.delete()
+                        await msg.channel.send(f"Bitte lass auch die anderen Leute zählen.")
+                else:
+                    await msg.delete()
+                    await msg.channel.send(f"Das war nicht die korrekte Zahl. Die nächste Zahl sollte {current_count + 1} sein.")
+            except ValueError:
+                await msg.delete()
+                await msg.channel.send("Bitte sende eine gültige Zahl.")
+        
+    await bot.process_commands(msg)
+
+@bot.event
+async def on_voice_state_update(member, before, after):
+    guild = member.guild
+    if after.channel and after.channel.id == 1303123299307491330:
+        new_channel = await guild.create_voice_channel(name=f"{member.name}'s Channel", category=after.channel.category)
+        await member.move_to(new_channel)
+
+        def check(m, b, a):
+            return m == member and a.channel != new_channel
+
+        await bot.wait_for('voice_state_update', check=check)
+        await new_channel.delete()
+
+@bot.event
+async def on_member_join(member):
+    player_role = bot.get_role(1203439759679168532)
+    announcement_role = bot.get_role(1206020311905214466)
+    welcome_channel = bot.get_channel(1204439767517761677)  # Replace with your welcome channel ID
+    await member.add_roles(player_role)
+    await member.add_roles(announcement_role)
+    await welcome_channel.send(f"Willkommen {member.mention} und viel Spaß auf unserem Discord-Server! Am besten liest du dir kurz noch die Regeln durch. 😉!")
+
+@bot.event
+async def on_raw_reaction_add(payload):
+    ChID = 1203627969617334272
+    if payload.channel_id != ChID:
+        return
+    if str(payload.emoji) == "❌":
+        guild = bot.get_guild(payload.guild_id)
+        member = guild.get_member(payload.user_id)
+        announcement_role = discord.utils.get(guild.roles, id=1206020311905214466)
+        await member.remove_roles(announcement_role)
+
+@bot.event
+async def on_raw_reaction_remove(payload):
+    ChID = 1203627969617334272
+    if payload.channel_id != ChID:
+        return
+    if str(payload.emoji) == "❌":
+        guild = bot.get_guild(payload.guild_id)
+        member = guild.get_member(payload.user_id)
+        announcement_role = discord.utils.get(guild.roles, id=1206020311905214466)
+        await member.add_roles(announcement_role)
+
+
+class TicketView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    
+    @discord.ui.button(label="🎫 Ticket erstellen", style=discord.ButtonStyle.green)
+    async def create_ticket(self, interaction: discord.Interaction, button: Button):
+        guild = interaction.guild
+        category = interaction.channel.category
+
+        ticket_channel = await category.create_text_channel(f"ticket-{interaction.user.name}")
+        supporter_role = guild.get_role(1203345032543866910)  # Replace with your Supporter role ID
+
+        await ticket_channel.set_permissions(interaction.user, read_messages=True, send_messages=True)
+        await ticket_channel.set_permissions(supporter_role, read_messages=True, send_messages=True)
+        await ticket_channel.set_permissions(guild.default_role, read_messages=False)
+
+        embed = discord.Embed(title="Ticket erstellt",
+            description=f"Vielen Dank {interaction.user.mention}, dass du ein Ticket erstellt hast. Bitte beschreibe dein Problem so genau wie Möglich. Ein {supporter_role.mention} wird sich bald um dich kümmern. Sollte dein Problem behoben sein, drücke auf den Button unten, um das Ticket zu schließen.",
+            color=0x00ff00)
+        #await ticket_channel.send(f"Willkommen {interaction.user.mention}, ein Teammitglied wird sich bald um dein Anliegen kümmern. Bitte erkläre dein Anliegen so genau wie möglich, so dass wir dir schnellstmöglichst helfen können!")
+        await interaction.response.send_message(f"Dein Ticket wurde erstellt: {ticket_channel.mention}", ephemeral=True)
+
+        close_button_view = CloseTicketView(ticket_channel)
+        #await ticket_channel.send("Klicke auf den Button unten, um das Ticket zu schließen.", view=close_button_view)
+        await ticket_channel.send(embed=embed, view=close_button_view)
+
+class CloseTicketView(View):
+    def __init__(self, ticket_channel):
+        super().__init__(timeout=None)
+        self.ticket_channel = ticket_channel
+
+    @discord.ui.button(label="🎫 Ticket schließen", style=discord.ButtonStyle.red)
+    async def close_ticket(self, button: Button, interaction: discord.Interaction):
+        await self.ticket_channel.delete()
+        
+@bot.tree.command(name="ticket", description='Erstellt ein "Ticket erstellen"-Embed')
+async def ticket(interaction: discord.Interaction):
+    embed = discord.Embed(title="Ticket erstellen", description="Klicke auf den Button unten, um ein Ticket zu erstellen.", color=0x00ff00)
+    view = TicketView()
+    await interaction.response.send_message(embed=embed, view=view)
+
+@bot.tree.command(name="yt_announcement", description='Erstellt eine Nachricht zum entfernen der "yt-announcement"-Rolle')
+async def yt_announcement(interaction: discord.Interaction):
+    channel = bot.get_channel(1203627969617334272)
+    await channel.send('Wer keine Benachrichtigung bei einem Upload erhalten möchte, kann auf diese Nachricht mit "❌" reagieren!')
+
+bot.run(token)
